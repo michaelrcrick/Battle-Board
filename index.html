@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sales Battle Board · Multi-User</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --card: #12121a;
+    --card-border: #1e1e2a;
+    --red: #e10600;
+    --red-dark: #b00500;
+    --yellow: #f5c518;
+    --green: #00c853;
+    --blue: #2196f3;
+    --orange: #ff9800;
+    --text: #f0f0f5;
+    --muted: #8a8a9a;
+    --stripe: #15151f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    background-image: repeating-linear-gradient(
+      90deg, transparent, transparent 40px, var(--stripe) 40px, var(--stripe) 80px
+    );
+  }
+  /* LOGIN SCREEN */
+  #loginScreen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .login-card {
+    background: var(--card);
+    border: 2px solid var(--red);
+    border-radius: 12px;
+    padding: 36px 32px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
+  .login-card h1 { font-size: 1.6rem; margin-bottom: 6px; letter-spacing: 1px; }
+  .login-card .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .login-card input {
+    width: 100%;
+    background: #1a1a24;
+    border: 1px solid #333;
+    color: white;
+    padding: 12px 14px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-size: 15px;
+  }
+  .login-card button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+  .login-card .primary { background: var(--red); color: white; }
+  .login-card .primary:hover { background: var(--red-dark); }
+  .login-card .secondary { background: transparent; color: var(--muted); border: 1px solid #333; margin-top: 10px; }
+  .login-card .error { color: #ff5252; font-size: 13px; margin-top: 10px; min-height: 18px; }
+  .login-card .checkered {
+    width: 60px; height: 30px; margin: 0 auto 16px;
+    background: repeating-conic-gradient(#fff 0% 25%, #000 0% 50%) 50% / 15px 15px;
+  }
+
+  /* APP */
+  #app { display: none; }
+  .header {
+    border: 2px solid var(--red);
+    margin: 12px;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 20px;
+    background: linear-gradient(180deg, #1a0000 0%, #0a0a0f 100%);
+  }
+  .checkered {
+    width: 80px; height: 40px;
+    background: repeating-conic-gradient(#fff 0% 25%, #000 0% 50%) 50% / 20px 20px;
+  }
+  .dept { font-size: 12px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .title-block { text-align: center; padding: 20px 10px 10px; }
+  .title-block h1 {
+    font-size: clamp(2rem, 6vw, 3.8rem);
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--red);
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 8px 28px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+  .subtitle {
+    margin-top: 10px;
+    color: var(--yellow);
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+  }
+  .month-bar {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px;
+    border-top: 1px solid #333;
+    flex-wrap: wrap;
+  }
+  .month-bar input, .month-bar select {
+    background: #1a1a24;
+    border: 1px solid #333;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .leaders {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    padding-bottom: 10px;
+  }
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 10px 16px;
+    background: #0d0d14;
+    border-bottom: 2px solid var(--red);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .nav button {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .nav button:hover { color: white; background: #1a1a24; }
+  .nav button.active {
+    background: var(--red);
+    color: white;
+    border-color: var(--red);
+  }
+  .nav-right { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .user-chip {
+    font-size: 12px;
+    color: var(--muted);
+    background: #1a1a24;
+    padding: 6px 10px;
+    border-radius: 20px;
+  }
+  .user-chip strong { color: var(--yellow); }
+  .btn {
+    background: #1a1a24;
+    border: 1px solid #333;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .btn:hover { background: #252532; }
+  .btn-primary { background: var(--red); border-color: var(--red); }
+  .btn-primary:hover { background: var(--red-dark); }
+  .btn-green { background: #0a3d1f; border-color: var(--green); color: var(--green); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .content { padding: 20px 16px 60px; max-width: 1400px; margin: 0 auto; }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .section-title .bar { width: 4px; height: 28px; background: var(--red); border-radius: 2px; }
+  .section-title h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: 1px; }
+  .section-sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 1px; }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .card.blue { border-color: #1e3a5f; }
+  .card.red { border-color: #5c1a1a; }
+  .card.green { border-color: #1a3d2a; }
+  .card.yellow { border-color: #4a3a10; }
+  .card-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .card-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .card-value.blue { color: #4fc3f7; }
+  .card-value.red { color: #ff5252; }
+  .card-value.green { color: var(--green); }
+  .card-value.yellow { color: var(--yellow); }
+  .card-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 14px;
+  }
+  th {
+    text-align: left;
+    padding: 12px 10px;
+    background: #0d0d14;
+    color: var(--yellow);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid #2a2a3a;
+  }
+  td {
+    padding: 10px;
+    border-bottom: 1px solid #1a1a24;
+  }
+  tr:hover td { background: #16161f; }
+  .rank {
+    display: inline-flex;
+    width: 26px; height: 26px;
+    align-items: center; justify-content: center;
+    background: #1e1e2a;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  input.edit, select.edit {
+    background: #1a1a24;
+    border: 1px solid #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: 70px;
+    font-size: 13px;
+  }
+  input.edit.wide { width: 110px; }
+  .grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .driver-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .driver-card .name { font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .driver-card .nums { display: flex; justify-content: space-between; }
+  .driver-card .goal { color: var(--yellow); font-weight: 700; font-size: 1.3rem; }
+  .driver-card .mtd { color: var(--green); font-weight: 700; font-size: 1.3rem; }
+  .driver-card .pace { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .banner {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .banner > div {
+    flex: 1;
+    min-width: 220px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .banner .green { background: #0a3d1f; color: #a5d6a7; }
+  .banner .red { background: #3d0a0a; color: #ef9a9a; }
+  .edit-bar {
+    background: #1a1a24;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: none;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .edit-bar.visible { display: flex; }
+  .edit-bar label { font-size: 13px; color: var(--muted); }
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #0a3d1f;
+    color: #a5d6a7;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; }
+  .hidden { display: none !important; }
+  footer {
+    text-align: center;
+    padding: 16px;
+    color: var(--muted);
+    font-size: 12px;
+    border-top: 1px solid #1a1a24;
+  }
+  /* USERS / ADMIN PANEL */
+  .users-panel {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .users-panel h3 { margin-bottom: 12px; }
+  .users-panel .add-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .users-panel input, .users-panel select {
+    background: #1a1a24;
+    border: 1px solid #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  .role-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .role-admin { background: #3d0a0a; color: #ff8a80; }
+  .role-editor { background: #1a3d2a; color: #69f0ae; }
+  .role-viewer { background: #1a2a3d; color: #82b1ff; }
+  .status-bar {
+    background: #0d0d14;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .status-bar .online { color: var(--green); }
+  @media (max-width: 700px) {
+    .card-value { font-size: 1.5rem; }
+    table { font-size: 12px; }
+    th, td { padding: 8px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== LOGIN ========== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="checkered"></div>
+    <h1>SALES BATTLE BOARD</h1>
+    <div class="sub">Grand Prix Edition · Multi-User</div>
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="email" />
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" />
+    <div class="error" id="loginError"></div>
+    <button class="primary" id="loginBtn">Sign In</button>
+    <button class="secondary" id="signupBtn">Create Account</button>
+    <p style="margin-top:18px;font-size:12px;color:var(--muted)">
+      First user who signs up becomes <strong style="color:var(--yellow)">Admin</strong>.
+    </p>
+  </div>
+</div>
+
+<!-- ========== APP ========== -->
+<div id="app">
+  <div class="status-bar">
+    <span>LIVE BOARD · <span class="online" id="connectionStatus">Connected</span></span>
+    <span id="roleLabel"></span>
+  </div>
+
+  <div class="header">
+    <div class="header-top">
+      <div class="checkered"></div>
+      <div class="dept" id="deptName">YOUR DEALERSHIP · SALES DEPARTMENT</div>
+      <div class="checkered"></div>
+    </div>
+    <div class="title-block">
+      <h1 id="raceTitle">OCTOBER GRAND PRIX</h1>
+      <div class="badge">SALES BATTLE BOARD</div>
+      <div class="subtitle" id="raceSubtitle">RACE TO 225 · TEAM GOAL 258 · START YOUR ENGINES</div>
+    </div>
+    <div class="month-bar">
+      <label>Month:</label>
+      <select id="monthSelect"></select>
+      <label>Year:</label>
+      <input type="number" id="yearInput" min="2020" max="2035" style="width:80px" />
+    </div>
+    <div class="leaders" id="leadersLine">GM · New & Used · F&I</div>
+  </div>
+
+  <div class="nav">
+    <button class="active" data-tab="clock">Clock</button>
+    <button data-tab="front">Front</button>
+    <button data-tab="back">Back</button>
+    <button data-tab="gross">Gross</button>
+    <button data-tab="standings">Standings</button>
+    <button data-tab="grid">Grid</button>
+    <button data-tab="csi">CSI</button>
+    <button data-tab="garage">Garage</button>
+    <button data-tab="pit">Pit Board</button>
+    <button data-tab="plan">Plan</button>
+    <button data-tab="users" id="usersTabBtn" class="hidden">Users</button>
+    <div class="nav-right">
+      <span class="user-chip" id="userChip"></span>
+      <button class="btn" id="editToggle">✏️ Edit Mode</button>
+      <button class="btn btn-primary" id="saveBtn">💾 Save</button>
+      <button class="btn" id="logoutBtn">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- EDIT BAR -->
+    <div class="edit-bar" id="editBar">
+      <div>
+        <label>Dealership Name</label><br>
+        <input class="edit wide" id="editDept" style="width:220px" />
+      </div>
+      <div>
+        <label>Race Title</label><br>
+        <input class="edit wide" id="editTitle" style="width:200px" />
+      </div>
+      <div>
+        <label>Store Plan (units)</label><br>
+        <input class="edit" type="number" id="editStorePlan" />
+      </div>
+      <div>
+        <label>Team Goal</label><br>
+        <input class="edit" type="number" id="editTeamGoal" />
+      </div>
+      <div>
+        <label>New Budget</label><br>
+        <input class="edit" type="number" id="editNewBudget" />
+      </div>
+      <div>
+        <label>Used Budget</label><br>
+        <input class="edit" type="number" id="editUsedBudget" />
+      </div>
+      <div>
+        <label>Leaders line</label><br>
+        <input class="edit wide" id="editLeaders" style="width:260px" />
+      </div>
+      <button class="btn btn-green" id="addDriverBtn">+ Add Driver</button>
+      <button class="btn" id="resetDataBtn">Reset to starter data</button>
+    </div>
+
+    <!-- USERS TAB (Admin only) -->
+    <div id="tab-users" class="hidden">
+      <div class="section-title"><div class="bar"></div><h2>USER MANAGEMENT</h2></div>
+      <div class="section-sub">ADMIN CONTROLS</div>
+      <div class="users-panel">
+        <h3>Add / Invite User</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
+          Create an account for someone (they can also sign up themselves). Then set their role here.
+        </p>
+        <div class="add-row">
+          <input type="email" id="newUserEmail" placeholder="user@email.com" style="flex:1;min-width:180px" />
+          <select id="newUserRole">
+            <option value="viewer">Viewer</option>
+            <option value="editor">Editor</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button class="btn btn-primary" id="addUserBtn">Add User</button>
+        </div>
+        <div id="addUserMsg" style="font-size:13px;margin-bottom:12px;min-height:18px"></div>
+
+        <h3 style="margin-top:20px">Current Users</h3>
+        <table>
+          <thead>
+            <tr><th>Email</th><th>Role</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CLOCK TAB -->
+    <div id="tab-clock">
+      <div class="section-title"><div class="bar"></div><h2>MONTH AT A GLANCE</h2></div>
+      <div class="section-sub">EVERY LAP COUNTS.</div>
+      <div class="cards" id="clockCards"></div>
+      <div class="section-title" style="margin-top:28px"><div class="bar"></div><h2>PACE TRACKER</h2></div>
+      <div class="section-sub">ACTUAL VS. BUDGET PACE</div>
+      <div class="card" style="padding:20px">
+        <canvas id="paceChart" height="180"></canvas>
+      </div>
+    </div>
+
+    <!-- STANDINGS TAB -->
+    <div id="tab-standings" class="hidden">
+      <div class="section-title"><div class="bar"></div><h2>TEAM PERFORMANCE</h2></div>
+      <div class="section-sub" id="driverCountLabel">DRIVERS ON THE GRID.</div>
+      <div style="overflow-x:auto">
+        <table id="standingsTable">
+          <thead>
+            <tr>
+              <th>#</th><th>DRIVER</th><th>GOAL</th><th>UNITS</th><th>NEW</th><th>USED</th>
+              <th>FRONT GROSS</th><th>BACK GROSS</th><th>TOTAL GROSS</th><th>% TO GOAL</th><th>TO GO</th>
+              <th class="edit-only hidden">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="standingsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GRID TAB -->
+    <div id="tab-grid" class="hidden">
+      <div class="section-title"><div class="bar"></div><h2>PERSONAL GOALS</h2></div>
+      <div class="section-sub">EVERY DRIVER, EVERY LAP.</div>
+      <div class="cards" id="gridSummary"></div>
+      <div class="grid-cards" id="gridCards" style="margin-top:16px"></div>
+      <div class="banner">
+        <div class="green">🏁 Pole position: Open on Day 1 — who takes it?</div>
+        <div class="red">🔧 Pit crew (needs backup): Add coverage in Leader Garage.</div>
+      </div>
+    </div>
+
+    <!-- FRONT / BACK / GROSS -->
+    <div id="tab-front" class="hidden">
+      <div class="section-title"><div class="bar"></div><h2>FRONT GROSS</h2></div>
+      <div class="section-sub">PUT POWER TO THE PAVEMENT.</div>
+      <div class="cards" id="frontCards"></div>
+      <div class="card" style="margin-top:16px">
+        <table>
+          <thead><tr><th>METRIC</th><th>ACTUAL</th><th>BUDGET</th><th>VARIANCE</th></tr></thead>
+          <tbody id="frontTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="tab-back" class="hidden">
+      <div class="section-title"><div class="bar"></div><h2>BACK GROSS</h2></div>
+      <div class="section-sub">FINISH STRONG.</div>
+      <div class="cards" id="backCards"></div>
+    </div>
+    <div id="tab-gross" class="hidden">
+      <div class="section-title"><div class="bar"></div><h2>TOTAL GROSS</h2></div>
+      <div class="section-sub">COMBINED HORSEPOWER.</div>
+      <div class="cards" id="grossCards"></div>
+    </div>
+
+    <!-- PLACEHOLDERS -->
+    <div id="tab-csi" class="hidden">
+      <div class="section-title"><div class="bar"></div><h2>CSI</h2></div>
+      <div class="section-sub">CUSTOMER SATISFACTION INDEX</div>
+      <div class="card"><p style="color:var(--muted)">Add your CSI scores and trends here.</p></div>
+    </div>
+    <div id="tab-garage" class="hidden">
+      <div class="section-title"><div class="bar"></div><h2>GARAGE</h2></div>
+      <div class="section-sub">LEADER TOOLS & COVERAGE</div>
+      <div class="card"><p style="color:var(--muted)">Leader notes, coverage, or training items.</p></div>
+    </div>
+    <div id="tab-pit" class="hidden">
+      <div class="section-title"><div class="bar"></div><h2>PIT BOARD</h2></div>
+      <div class="section-sub">QUICK CALLS & ALERTS</div>
+      <div class="card"><p style="color:var(--muted)">Daily focus items and alerts.</p></div>
+    </div>
+    <div id="tab-plan" class="hidden">
+      <div class="section-title"><div class="bar"></div><h2>PLAN</h2></div>
+      <div class="section-sub">MONTHLY STRATEGY</div>
+      <div class="card"><p style="color:var(--muted)">Store plan details and strategy notes.</p></div>
+    </div>
+  </div>
+
+  <footer>LIVE MULTI-USER BOARD · Powered by Firebase · Roles: Admin / Editor / Viewer</footer>
+</div>
+
+<div class="toast" id="toast">Saved!</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  // ============================================================
+  // Firebase config (battle-board-38608)
+  // ============================================================
+  const firebaseConfig = {
+    apiKey: "__FIREBASE_API_KEY__",
+    authDomain: "__FIREBASE_AUTH_DOMAIN__",
+    projectId: "__FIREBASE_PROJECT_ID__",
+    storageBucket: "__FIREBASE_STORAGE_BUCKET__",
+    messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
+    appId: "__FIREBASE_APP_ID__"
+  };
+  // ============================================================
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+    createUserWithEmailAndPassword, signOut, updateProfile
+  } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc, collection,
+    onSnapshot, query, getDocs, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // ---------- DEFAULT DATA ----------
+  const DEFAULT_DRIVERS = [
+    { name: "Alec", goal: 10, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Alejandro", goal: 12, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Alfredo", goal: 15, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Brandon", goal: 12, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Darren", goal: 10, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Dominic", goal: 10, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Eli", goal: 12, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Isaac", goal: 13, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Jay", goal: 13, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "John C.", goal: 18, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "John H.", goal: 15, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "John K.", goal: 13, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Jorawar", goal: 10, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Lee", goal: 15, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Malachi", goal: 10, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Max F.", goal: 6, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Max S.", goal: 12, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "n/a", goal: 0, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Sam L.", goal: 15, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Sam Y.", goal: 16, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 },
+    { name: "Vic", goal: 13, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 }
+  ];
+
+  const DEFAULT_META = {
+    dept: "TOYOTA OF GRAND RAPIDS · SALES DEPARTMENT",
+    title: "OCTOBER GRAND PRIX",
+    leaders: "GM Joe Adams · New & Used: Michael Crick · F&I: Jay Rodenberry",
+    storePlan: 225,
+    teamGoal: 258,
+    newBudget: 110,
+    usedBudget: 115,
+    month: 9,
+    year: 2026
+  };
+
+  // ---------- STATE ----------
+  let currentUser = null;
+  let userRole = "viewer"; // admin | editor | viewer
+  let state = {
+    meta: { ...DEFAULT_META },
+    drivers: JSON.parse(JSON.stringify(DEFAULT_DRIVERS)),
+    editMode: false
+  };
+  let unsubBoard = null;
+  let unsubUsers = null;
+  let isSaving = false;
+
+  // ---------- HELPERS ----------
+  function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+  function dayOfMonth() {
+    const now = new Date();
+    if (now.getFullYear() === state.meta.year && now.getMonth() === state.meta.month) return now.getDate();
+    return 1;
+  }
+  function formatMoney(n) { return "$" + Number(n || 0).toLocaleString(); }
+  function pct(n, d) { if (!d) return "0%"; return Math.round((n / d) * 100) + "%"; }
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2200);
+  }
+  function canEdit() { return userRole === "admin" || userRole === "editor"; }
+  function isAdmin() { return userRole === "admin"; }
+
+  // ---------- AUTH ----------
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("loginEmail").value.trim();
+    const pass = document.getElementById("loginPassword").value;
+    document.getElementById("loginError").textContent = "";
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (e) {
+      document.getElementById("loginError").textContent = e.message.replace("Firebase: ", "");
+    }
+  });
+
+  document.getElementById("signupBtn").addEventListener("click", async () => {
+    const email = document.getElementById("loginEmail").value.trim();
+    const pass = document.getElementById("loginPassword").value;
+    document.getElementById("loginError").textContent = "";
+    if (pass.length < 6) {
+      document.getElementById("loginError").textContent = "Password must be at least 6 characters";
+      return;
+    }
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      // Check if this is the first user → make admin
+      const usersSnap = await getDocs(collection(db, "users"));
+      const role = usersSnap.empty ? "admin" : "viewer";
+      await setDoc(doc(db, "users", cred.user.uid), {
+        email: email,
+        role: role,
+        createdAt: serverTimestamp()
+      });
+      // Ensure board document exists
+      const boardRef = doc(db, "board", "main");
+      const boardSnap = await getDoc(boardRef);
+      if (!boardSnap.exists()) {
+        await setDoc(boardRef, {
+          meta: DEFAULT_META,
+          drivers: DEFAULT_DRIVERS,
+          updatedAt: serverTimestamp()
+        });
+      }
+    } catch (e) {
+      document.getElementById("loginError").textContent = e.message.replace("Firebase: ", "");
+    }
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      await loadUserRole();
+      startBoardListener();
+      if (isAdmin()) {
+        document.getElementById("usersTabBtn").classList.remove("hidden");
+        startUsersListener();
+      } else {
+        document.getElementById("usersTabBtn").classList.add("hidden");
+      }
+      updateUIForRole();
+    } else {
+      currentUser = null;
+      userRole = "viewer";
+      document.getElementById("loginScreen").style.display = "flex";
+      document.getElementById("app").style.display = "none";
+      if (unsubBoard) unsubBoard();
+      if (unsubUsers) unsubUsers();
+    }
+  });
+
+  async function loadUserRole() {
+    const snap = await getDoc(doc(db, "users", currentUser.uid));
+    if (snap.exists()) {
+      userRole = snap.data().role || "viewer";
+    } else {
+      // Safety: create viewer record
+      userRole = "viewer";
+      await setDoc(doc(db, "users", currentUser.uid), {
+        email: currentUser.email,
+        role: "viewer",
+        createdAt: serverTimestamp()
+      });
+    }
+    document.getElementById("userChip").innerHTML = `${currentUser.email} · <strong>${userRole.toUpperCase()}</strong>`;
+    document.getElementById("roleLabel").textContent = `Role: ${userRole.toUpperCase()}`;
+  }
+
+  function updateUIForRole() {
+    const editBtn = document.getElementById("editToggle");
+    const saveBtn = document.getElementById("saveBtn");
+    if (!canEdit()) {
+      editBtn.disabled = true;
+      saveBtn.disabled = true;
+      editBtn.title = "Viewers cannot edit";
+      state.editMode = false;
+    } else {
+      editBtn.disabled = false;
+      saveBtn.disabled = false;
+      editBtn.title = "";
+    }
+    renderAll();
+  }
+
+  // ---------- BOARD DATA ----------
+  function startBoardListener() {
+    if (unsubBoard) unsubBoard();
+    unsubBoard = onSnapshot(doc(db, "board", "main"), (snap) => {
+      if (snap.exists() && !isSaving) {
+        const data = snap.data();
+        state.meta = { ...DEFAULT_META, ...data.meta };
+        state.drivers = data.drivers || JSON.parse(JSON.stringify(DEFAULT_DRIVERS));
+        renderAll();
+      }
+      document.getElementById("connectionStatus").textContent = "Connected";
+    }, (err) => {
+      console.error(err);
+      document.getElementById("connectionStatus").textContent = "Error";
+    });
+  }
+
+  async function saveBoard() {
+    if (!canEdit()) return;
+    isSaving = true;
+    try {
+      await setDoc(doc(db, "board", "main"), {
+        meta: state.meta,
+        drivers: state.drivers,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUser.email
+      });
+      showToast("Saved for everyone");
+    } catch (e) {
+      showToast("Save failed: " + e.message);
+    }
+    isSaving = false;
+  }
+
+  // ---------- USERS (Admin) ----------
+  function startUsersListener() {
+    if (unsubUsers) unsubUsers();
+    unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
+      const tbody = document.getElementById("usersTableBody");
+      let html = "";
+      snap.forEach(docSnap => {
+        const u = docSnap.data();
+        const uid = docSnap.id;
+        html += `<tr>
+          <td>${u.email || uid}</td>
+          <td><span class="role-badge role-${u.role}">${u.role}</span></td>
+          <td>
+            <select data-uid="${uid}" class="role-select edit">
+              <option value="viewer" ${u.role==="viewer"?"selected":""}>Viewer</option>
+              <option value="editor" ${u.role==="editor"?"selected":""}>Editor</option>
+              <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
+            </select>
+          </td>
+        </tr>`;
+      });
+      tbody.innerHTML = html;
+      tbody.querySelectorAll(".role-select").forEach(sel => {
+        sel.addEventListener("change", async (e) => {
+          const uid = e.target.dataset.uid;
+          const newRole = e.target.value;
+          await updateDoc(doc(db, "users", uid), { role: newRole });
+          showToast("Role updated");
+        });
+      });
+    });
+  }
+
+  document.getElementById("addUserBtn").addEventListener("click", async () => {
+    const email = document.getElementById("newUserEmail").value.trim().toLowerCase();
+    const role = document.getElementById("newUserRole").value;
+    const msg = document.getElementById("addUserMsg");
+    msg.textContent = "";
+    if (!email) { msg.textContent = "Enter an email"; return; }
+
+    // We can't create Auth users from client without Admin SDK.
+    // Best approach: tell the user to have them sign up, then we set the role.
+    // Alternative: store a pending invite.
+    try {
+      // Check if user already exists by scanning
+      const usersSnap = await getDocs(collection(db, "users"));
+      let found = false;
+      usersSnap.forEach(d => {
+        if ((d.data().email || "").toLowerCase() === email) {
+          found = true;
+          updateDoc(doc(db, "users", d.id), { role });
+        }
+      });
+      if (found) {
+        msg.style.color = "#69f0ae";
+        msg.textContent = "User found — role updated to " + role;
+      } else {
+        // Create a pending invite document
+        await setDoc(doc(db, "invites", email), {
+          email, role, invitedBy: currentUser.email, createdAt: serverTimestamp()
+        });
+        msg.style.color = "#82b1ff";
+        msg.textContent = `Invite saved. Tell ${email} to create an account with that email. After they sign up, set their role here.`;
+      }
+      document.getElementById("newUserEmail").value = "";
+    } catch (e) {
+      msg.style.color = "#ff5252";
+      msg.textContent = e.message;
+    }
+  });
+
+  // After signup, check for pending invite and apply role
+  async function applyInviteIfAny() {
+    if (!currentUser) return;
+    const inviteRef = doc(db, "invites", currentUser.email.toLowerCase());
+    const inviteSnap = await getDoc(inviteRef);
+    if (inviteSnap.exists()) {
+      const role = inviteSnap.data().role || "viewer";
+      await setDoc(doc(db, "users", currentUser.uid), {
+        email: currentUser.email,
+        role,
+        createdAt: serverTimestamp()
+      }, { merge: true });
+      // optionally delete invite
+      userRole = role;
+    }
+  }
+
+  // ---------- RENDER (same as before, adapted) ----------
+  function renderHeader() {
+    document.getElementById("deptName").textContent = state.meta.dept;
+    document.getElementById("raceTitle").textContent = state.meta.title;
+    document.getElementById("raceSubtitle").textContent =
+      `RACE TO ${state.meta.storePlan} · TEAM GOAL ${state.meta.teamGoal} · START YOUR ENGINES`;
+    document.getElementById("leadersLine").textContent = state.meta.leaders;
+    document.getElementById("yearInput").value = state.meta.year;
+    const sel = document.getElementById("monthSelect");
+    sel.innerHTML = "";
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    months.forEach((m, i) => {
+      const opt = document.createElement("option");
+      opt.value = i; opt.textContent = m.toUpperCase();
+      if (i === state.meta.month) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    // Disable month change for viewers
+    sel.disabled = !canEdit();
+    document.getElementById("yearInput").disabled = !canEdit();
+  }
+
+  function totals() {
+    let newU = 0, usedU = 0, front = 0, back = 0, goal = 0;
+    state.drivers.forEach(d => {
+      newU += Number(d.newUnits) || 0;
+      usedU += Number(d.usedUnits) || 0;
+      front += Number(d.frontGross) || 0;
+      back += Number(d.backGross) || 0;
+      goal += Number(d.goal) || 0;
+    });
+    return { newU, usedU, totalU: newU + usedU, front, back, totalGross: front + back, goal };
+  }
+
+  function renderClock() {
+    const t = totals();
+    const dim = daysInMonth(state.meta.year, state.meta.month);
+    const day = dayOfMonth();
+    const elapsed = Math.min(day, dim);
+    const remaining = Math.max(0, dim - elapsed);
+    const pctComplete = Math.round((elapsed / dim) * 100);
+    const needed = remaining > 0 ? (state.meta.storePlan - t.totalU) / remaining : 0;
+    const actualPace = elapsed > 0 ? (t.totalU / elapsed).toFixed(1) : "0.0";
+
+    document.getElementById("clockCards").innerHTML = `
+      <div class="card blue"><div class="card-label">Days in Month</div><div class="card-value blue">${dim}</div><div class="card-sub">${document.getElementById("monthSelect").selectedOptions[0]?.text || ""} ${state.meta.year}</div></div>
+      <div class="card red"><div class="card-label">Days Elapsed</div><div class="card-value red">${elapsed}</div><div class="card-sub">Day ${elapsed} checkpoint</div></div>
+      <div class="card green"><div class="card-label">Days Remaining</div><div class="card-value green">${remaining}</div><div class="card-sub">Time left on the track</div></div>
+      <div class="card yellow"><div class="card-label">Month Complete</div><div class="card-value yellow">${pctComplete}%</div><div class="card-sub">Day ${elapsed} of ${dim}</div></div>
+      <div class="card red"><div class="card-label">New Units Sold (MTD)</div><div class="card-value red">${t.newU}</div><div class="card-sub">Budget ${state.meta.newBudget} · Var ${t.newU - state.meta.newBudget}</div></div>
+      <div class="card blue"><div class="card-label">Used Units Sold (MTD)</div><div class="card-value blue">${t.usedU}</div><div class="card-sub">Budget ${state.meta.usedBudget} · Var ${t.usedU - state.meta.usedBudget}</div></div>
+      <div class="card yellow"><div class="card-label">Total Units Sold (MTD)</div><div class="card-value yellow">${t.totalU}</div><div class="card-sub">Budget ${state.meta.storePlan} · Var ${t.totalU - state.meta.storePlan}</div></div>
+      <div class="card green"><div class="card-label">Units / Day Needed</div><div class="card-value green">${needed > 0 ? needed.toFixed(1) : "0.0"} / day</div><div class="card-sub">Actual pace ${actualPace} / day</div></div>
+    `;
+    drawPaceChart(t.totalU, state.meta.storePlan, dim, elapsed);
+  }
+
+  function drawPaceChart(actual, budget, dim, elapsed) {
+    const canvas = document.getElementById("paceChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = canvas.offsetWidth * dpr;
+    canvas.height = 180 * dpr;
+    ctx.scale(dpr, dpr);
+    const w = canvas.offsetWidth, h = 180;
+    ctx.clearRect(0, 0, w, h);
+    ctx.beginPath(); ctx.strokeStyle = "#555"; ctx.lineWidth = 2;
+    ctx.moveTo(40, h - 30); ctx.lineTo(w - 20, 30); ctx.stroke();
+    const xNow = 40 + ((w - 60) * (elapsed / dim));
+    const yNow = h - 30 - ((h - 60) * (actual / (budget * 1.1 || 1)));
+    ctx.beginPath(); ctx.strokeStyle = "#e10600"; ctx.lineWidth = 3;
+    ctx.moveTo(40, h - 30); ctx.lineTo(xNow, yNow); ctx.stroke();
+    ctx.fillStyle = "#8a8a9a"; ctx.font = "11px sans-serif";
+    ctx.fillText("0", 10, h - 26); ctx.fillText(String(budget), 10, 40);
+    ctx.fillText("Start", 40, h - 10); ctx.fillText("Month End", w - 70, h - 10);
+  }
+
+  function renderStandings() {
+    const tbody = document.getElementById("standingsBody");
+    const edit = state.editMode && canEdit();
+    document.querySelectorAll(".edit-only").forEach(el => el.classList.toggle("hidden", !edit));
+
+    let html = "";
+    state.drivers.forEach((d, i) => {
+      const units = (Number(d.newUnits)||0) + (Number(d.usedUnits)||0);
+      const totalG = (Number(d.frontGross)||0) + (Number(d.backGross)||0);
+      const toGo = Math.max(0, (Number(d.goal)||0) - units);
+      const p = pct(units, d.goal);
+      if (edit) {
+        html += `<tr>
+          <td><span class="rank">${i+1}</span></td>
+          <td><input class="edit wide" data-i="${i}" data-f="name" value="${d.name}" /></td>
+          <td><input class="edit" type="number" data-i="${i}" data-f="goal" value="${d.goal}" /></td>
+          <td>${units}</td>
+          <td><input class="edit" type="number" data-i="${i}" data-f="newUnits" value="${d.newUnits}" /></td>
+          <td><input class="edit" type="number" data-i="${i}" data-f="usedUnits" value="${d.usedUnits}" /></td>
+          <td><input class="edit" type="number" data-i="${i}" data-f="frontGross" value="${d.frontGross}" /></td>
+          <td><input class="edit" type="number" data-i="${i}" data-f="backGross" value="${d.backGross}" /></td>
+          <td>${formatMoney(totalG)}</td><td>${p}</td><td>${toGo}</td>
+          <td><button class="btn" data-del="${i}" style="padding:4px 8px">✕</button></td>
+        </tr>`;
+      } else {
+        html += `<tr>
+          <td><span class="rank">${i+1}</span></td>
+          <td>${d.name}</td><td>${d.goal}</td><td>${units}</td>
+          <td>${d.newUnits}</td><td>${d.usedUnits}</td>
+          <td>${formatMoney(d.frontGross)}</td><td>${formatMoney(d.backGross)}</td>
+          <td>${formatMoney(totalG)}</td><td>${p}</td><td>${toGo}</td>
+        </tr>`;
+      }
+    });
+    const t = totals();
+    html += `<tr style="background:#0d0d14;font-weight:700">
+      <td></td><td>Team Total</td><td>${t.goal}</td><td>${t.totalU}</td>
+      <td>${t.newU}</td><td>${t.usedU}</td>
+      <td>${formatMoney(t.front)}</td><td>${formatMoney(t.back)}</td>
+      <td>${formatMoney(t.totalGross)}</td><td>${pct(t.totalU, t.goal)}</td>
+      <td>${Math.max(0, t.goal - t.totalU)}</td>${edit ? "<td></td>" : ""}
+    </tr>`;
+    tbody.innerHTML = html;
+    document.getElementById("driverCountLabel").textContent = `${state.drivers.length} DRIVERS ON THE GRID.`;
+
+    if (edit) {
+      tbody.querySelectorAll("input[data-i]").forEach(inp => {
+        inp.addEventListener("change", e => {
+          const i = +e.target.dataset.i, f = e.target.dataset.f;
+          let v = e.target.value;
+          if (f !== "name") v = Number(v) || 0;
+          state.drivers[i][f] = v;
+          renderAll();
+        });
+      });
+      tbody.querySelectorAll("[data-del]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.drivers.splice(+btn.dataset.del, 1);
+          renderAll();
+        });
+      });
+    }
+  }
+
+  function renderGrid() {
+    const t = totals();
+    document.getElementById("gridSummary").innerHTML = `
+      <div class="card yellow"><div class="card-label">Team Goal</div><div class="card-value yellow">${state.meta.teamGoal}</div><div class="card-sub">Every driver, every lap</div></div>
+      <div class="card"><div class="card-label">Store Plan (Retail)</div><div class="card-value">${state.meta.storePlan}</div><div class="card-sub">${state.meta.newBudget} new / ${state.meta.usedBudget} used</div></div>
+      <div class="card green"><div class="card-label">Goal vs Plan</div><div class="card-value green">+${state.meta.teamGoal - state.meta.storePlan}</div><div class="card-sub">Over plan</div></div>
+      <div class="card red"><div class="card-label">% to Goal (MTD)</div><div class="card-value red">${pct(t.totalU, state.meta.teamGoal)}</div><div class="card-sub">${t.totalU} of ${state.meta.teamGoal}</div></div>
+    `;
+    const dim = daysInMonth(state.meta.year, state.meta.month);
+    let cards = "";
+    state.drivers.forEach((d, i) => {
+      const units = (Number(d.newUnits)||0) + (Number(d.usedUnits)||0);
+      const pace = dim > 0 ? ((Number(d.goal)||0) / dim).toFixed(2) : "0.00";
+      cards += `<div class="driver-card">
+        <div class="name"><span class="rank">${i+1}</span> ${d.name}</div>
+        <div class="nums">
+          <div><div style="font-size:10px;color:var(--muted)">GOAL</div><div class="goal">${d.goal}</div></div>
+          <div><div style="font-size:10px;color:var(--muted)">MTD</div><div class="mtd">${units}</div></div>
+        </div>
+        <div class="pace">Pace ${pace} / day</div>
+      </div>`;
+    });
+    document.getElementById("gridCards").innerHTML = cards;
+  }
+
+  function renderFrontBackGross() {
+    const t = totals();
+    document.getElementById("frontCards").innerHTML = `
+      <div class="card red"><div class="card-label">Front Gross (Actual)</div><div class="card-value red">${formatMoney(t.front)}</div></div>
+      <div class="card"><div class="card-label">New Front (est. budget)</div><div class="card-value">${formatMoney(state.meta.newBudget * 2750)}</div></div>
+      <div class="card"><div class="card-label">Used Front (est. budget)</div><div class="card-value">${formatMoney(state.meta.usedBudget * 1850)}</div></div>
+    `;
+    document.getElementById("frontTableBody").innerHTML = `
+      <tr><td>New Vehicle – Front Gross</td><td>${formatMoney(t.front * 0.6)}</td><td>${formatMoney(state.meta.newBudget * 2750)}</td><td style="color:#ff5252">${formatMoney(t.front * 0.6 - state.meta.newBudget * 2750)}</td></tr>
+      <tr><td>Used Vehicle – Front Gross</td><td>${formatMoney(t.front * 0.4)}</td><td>${formatMoney(state.meta.usedBudget * 1850)}</td><td style="color:#ff5252">${formatMoney(t.front * 0.4 - state.meta.usedBudget * 1850)}</td></tr>
+    `;
+    document.getElementById("backCards").innerHTML = `
+      <div class="card blue"><div class="card-label">Back Gross (Actual)</div><div class="card-value blue">${formatMoney(t.back)}</div></div>
+      <div class="card"><div class="card-label">Combined Back Target (est.)</div><div class="card-value">${formatMoney(416250)}</div></div>
+    `;
+    document.getElementById("grossCards").innerHTML = `
+      <div class="card yellow"><div class="card-label">Total Gross (MTD)</div><div class="card-value yellow">${formatMoney(t.totalGross)}</div></div>
+      <div class="card"><div class="card-label">Front</div><div class="card-value">${formatMoney(t.front)}</div></div>
+      <div class="card"><div class="card-label">Back</div><div class="card-value">${formatMoney(t.back)}</div></div>
+      <div class="card green"><div class="card-label">Per Unit (avg)</div><div class="card-value green">${t.totalU ? formatMoney(Math.round(t.totalGross / t.totalU)) : "$0"}</div></div>
+    `;
+  }
+
+  function renderEditBar() {
+    const bar = document.getElementById("editBar");
+    bar.classList.toggle("visible", state.editMode && canEdit());
+    if (state.editMode && canEdit()) {
+      document.getElementById("editDept").value = state.meta.dept;
+      document.getElementById("editTitle").value = state.meta.title;
+      document.getElementById("editStorePlan").value = state.meta.storePlan;
+      document.getElementById("editTeamGoal").value = state.meta.teamGoal;
+      document.getElementById("editNewBudget").value = state.meta.newBudget;
+      document.getElementById("editUsedBudget").value = state.meta.usedBudget;
+      document.getElementById("editLeaders").value = state.meta.leaders;
+    }
+  }
+
+  function renderAll() {
+    renderHeader();
+    renderClock();
+    renderStandings();
+    renderGrid();
+    renderFrontBackGross();
+    renderEditBar();
+  }
+
+  // ---------- EVENTS ----------
+  document.querySelectorAll(".nav button[data-tab]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".nav button[data-tab]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll("[id^=tab-]").forEach(t => t.classList.add("hidden"));
+      document.getElementById("tab-" + btn.dataset.tab).classList.remove("hidden");
+    });
+  });
+
+  document.getElementById("editToggle").addEventListener("click", () => {
+    if (!canEdit()) return;
+    state.editMode = !state.editMode;
+    document.getElementById("editToggle").textContent = state.editMode ? "✓ Done Editing" : "✏️ Edit Mode";
+    renderAll();
+  });
+
+  document.getElementById("saveBtn").addEventListener("click", saveBoard);
+
+  document.getElementById("monthSelect").addEventListener("change", e => {
+    if (!canEdit()) return;
+    state.meta.month = +e.target.value;
+    renderAll();
+  });
+  document.getElementById("yearInput").addEventListener("change", e => {
+    if (!canEdit()) return;
+    state.meta.year = +e.target.value || 2026;
+    renderAll();
+  });
+
+  document.getElementById("addDriverBtn").addEventListener("click", () => {
+    state.drivers.push({ name: "New Driver", goal: 10, newUnits: 0, usedUnits: 0, frontGross: 0, backGross: 0 });
+    renderAll();
+  });
+
+  document.getElementById("resetDataBtn").addEventListener("click", () => {
+    if (confirm("Reset all data to the original starter set?")) {
+      state.meta = { ...DEFAULT_META };
+      state.drivers = JSON.parse(JSON.stringify(DEFAULT_DRIVERS));
+      saveBoard();
+      renderAll();
+    }
+  });
+
+  ["editDept","editTitle","editStorePlan","editTeamGoal","editNewBudget","editUsedBudget","editLeaders"].forEach(id => {
+    document.getElementById(id).addEventListener("change", e => {
+      const map = {
+        editDept: "dept", editTitle: "title", editStorePlan: "storePlan",
+        editTeamGoal: "teamGoal", editNewBudget: "newBudget", editUsedBudget: "usedBudget",
+        editLeaders: "leaders"
+      };
+      let v = e.target.value;
+      if (["storePlan","teamGoal","newBudget","usedBudget"].includes(map[id])) v = Number(v) || 0;
+      state.meta[map[id]] = v;
+      renderAll();
+    });
+  });
+
+  // Enter key on login
+  document.getElementById("loginPassword").addEventListener("keydown", e => {
+    if (e.key === "Enter") document.getElementById("loginBtn").click();
+  });
+</script>
+</body>
+</html>
